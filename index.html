@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bundle Proposition — Pipeline Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:wght@300;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #F5F3EE;
+  --surf:     #FDFCF9;
+  --surf2:    #EFEDE7;
+  --bdr:      #DDD9D0;
+  --bdr2:     #C8C4BB;
+  --tx:       #1A1916;
+  --tx2:      #5C5950;
+  --tx3:      #9C9890;
+  --blue:     #2A5EEA;
+  --blue-bg:  #EBF0FD;
+  --blue-dk:  #1A3FA3;
+  --green:    #1A7A4A;
+  --green-bg: #E8F5EE;
+  --amber:    #925A00;
+  --amber-bg: #FDF3E0;
+  --r:        9px;
+  --rlg:      14px;
+  --sh:       0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.6}
+
+/* ── HEADER ── */
+.hdr{background:var(--tx);color:#fff;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:50}
+.hdr-logo{font-family:'Fraunces',serif;font-weight:700;font-size:16px;color:#fff}
+.hdr-logo span{color:#7FA8FF}
+.hdr-meta{font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Mono',monospace}
+
+/* ── DESKTOP LAYOUT ── */
+.layout{display:flex;min-height:calc(100vh - 52px)}
+.sidebar{width:196px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--bdr);padding:1.25rem 0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.content{flex:1;min-width:0;padding:1.75rem 1.5rem;max-width:1040px}
+
+/* ── SIDEBAR NAV ── */
+.nav-group-lbl{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);padding:0 1rem;margin:1rem 0 .4rem}
+.nav-group-lbl:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 1rem;background:none;border:none;border-left:2px solid transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--tx2);text-align:left;transition:all .12s}
+.nav-item:hover{background:var(--surf2);color:var(--tx)}
+.nav-item.on{background:var(--blue-bg);color:var(--blue);font-weight:500;border-left-color:var(--blue)}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ── PAGES ── */
+.page{display:none}.page.on{display:block}
+.pg-title{font-family:'Fraunces',serif;font-weight:500;font-size:24px;letter-spacing:-.3px;margin-bottom:.2rem}
+.pg-sub{font-size:12px;color:var(--tx3);margin-bottom:1.5rem}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+.met{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:.85rem 1rem;box-shadow:var(--sh)}
+.met-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:.3rem}
+.met-val{font-family:'Fraunces',serif;font-size:26px;font-weight:700;line-height:1;margin-bottom:.2rem}
+.met-sub{font-size:10px;color:var(--tx3)}
+
+/* ── CARDS ── */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rlg);padding:1.15rem 1.35rem;box-shadow:var(--sh);margin-bottom:1.15rem}
+.card-title{font-size:12.5px;font-weight:500;margin-bottom:.85rem;padding-bottom:.65rem;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center}
+.pill{font-size:10px;font-weight:400;background:var(--surf2);color:var(--tx2);padding:2px 8px;border-radius:99px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.15rem;margin-bottom:1.15rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.15rem;margin-bottom:1.15rem}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.badge-blue  {background:var(--blue-bg);color:var(--blue-dk)}
+.badge-green {background:var(--green-bg);color:var(--green)}
+.badge-amber {background:var(--amber-bg);color:var(--amber)}
+.badge-gray  {background:var(--surf2);color:var(--tx2)}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.dt{width:100%;border-collapse:collapse;font-size:12px}
+table.dt thead th{text-align:left;padding:5px 9px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:1px solid var(--bdr);background:var(--surf2);white-space:nowrap}
+table.dt tbody td{padding:6px 9px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt tbody tr:hover td{background:var(--surf2)}
+.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--tx2)}
+.num{text-align:right;font-family:'DM Mono',monospace;font-size:11px}
+.lhi{color:var(--green);font-weight:500}
+.lmd{color:var(--amber);font-weight:500}
+.chi{color:var(--blue)}
+
+/* ── PROGRESS BARS ── */
+.pb{background:var(--surf2);border-radius:99px;height:6px;overflow:hidden;margin-top:3px}
+.pb-fill{height:100%;border-radius:99px;background:var(--blue)}
+.pb-fill.g{background:var(--green)}
+
+/* ── PIPELINE STEPS ── */
+.pipe{padding:.9rem 0;border-bottom:1px solid var(--bdr);display:flex;gap:.9rem;align-items:flex-start}
+.pipe:last-child{border-bottom:none}
+.pipe-n{width:26px;height:26px;border-radius:50%;background:var(--tx);color:#fff;font-size:11px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pipe-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.pipe-desc{font-size:11px;color:var(--tx2)}
+.pipe-files{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}
+.fchip{font-size:10px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:4px;background:var(--surf2);color:var(--tx2);border:1px solid var(--bdr)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;border-bottom:1px solid var(--bdr);margin-bottom:1.15rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:6px 14px;border:1px solid transparent;border-bottom:none;border-radius:5px 5px 0 0;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx2);white-space:nowrap;position:relative;top:1px;transition:background .1s}
+.tab.on{background:var(--surf);border-color:var(--bdr);color:var(--tx);font-weight:500}
+.tab:hover:not(.on){background:var(--surf2)}
+.tpane{display:none}.tpane.on{display:block}
+
+/* ── GBB ── */
+.arch-btn{width:100%;display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--surf);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx2);text-align:left;margin-bottom:6px;transition:all .1s}
+.arch-btn:hover{border-color:var(--blue);background:var(--blue-bg);color:var(--tx)}
+.arch-btn.sel{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);font-weight:500}
+.tier{border-radius:var(--r);padding:.9rem 1rem;margin-bottom:.65rem;border-left:3px solid transparent}
+.tier-g{background:var(--green-bg);border-left-color:var(--green);border:1px solid #B3DFC7;border-left-width:3px}
+.tier-b{background:var(--blue-bg);border-left-color:var(--blue);border:1px solid #C0D3FA;border-left-width:3px}
+.tier-p{background:var(--amber-bg);border-left-color:var(--amber);border:1px solid #F5D9A0;border-left-width:3px}
+.tier-lbl{font-size:12px;font-weight:500;margin-bottom:5px}
+.tier-lbl.g{color:var(--green)}.tier-lbl.b{color:var(--blue-dk)}.tier-lbl.p{color:var(--amber)}
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.ppill{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--bdr2);background:var(--surf);color:var(--tx2)}
+.ppill.hero{background:var(--amber-bg);border-color:#F5C97A;color:var(--amber);font-weight:500}
+.ppill.new{background:var(--green-bg);border-color:#96D4B0;color:var(--green);font-weight:500}
+.tier-story{font-size:11px;color:var(--tx2);font-style:italic;line-height:1.5;margin-bottom:7px}
+.tier-stats{display:flex;flex-wrap:wrap;gap:12px}
+.ts{font-size:11px;color:var(--tx3)}.ts b{color:var(--tx);font-weight:500}
+.rec-badge{display:inline-block;font-size:10px;font-weight:500;padding:1px 7px;border-radius:99px;background:#DBEAFE;color:var(--blue-dk);margin-left:7px;vertical-align:middle}
+.divider{display:flex;align-items:center;gap:8px;margin:.5rem 0}
+.divider-line{flex:1;height:1px;background:var(--bdr)}
+.hero-row{display:grid;grid-template-columns:1fr 70px 70px 65px 65px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.hero-row:last-child{border-bottom:none}
+.hdr-row{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3)}
+.scroll-box{max-height:380px;overflow-y:auto}
+.scroll-box::-webkit-scrollbar{width:3px}
+.scroll-box::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+.summ-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.summ-tbl th{padding:5px 7px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--bdr);background:var(--surf2);white-space:nowrap;text-align:left}
+.summ-tbl td{padding:6px 7px;border-bottom:1px solid var(--bdr);vertical-align:top}
+.summ-tbl tr:last-child td{border-bottom:none}
+.summ-tbl tr:hover td{background:var(--surf2)}
+.tg{color:var(--green)}.tb{color:var(--blue-dk)}.tp{color:var(--amber)}
+
+/* ── MOBILE BOTTOM NAV ── */
+.bnav{display:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .sidebar{display:none}
+  .content{padding:1rem .875rem;padding-bottom:80px}
+  .hdr-meta{display:none}
+  .hdr{padding:0 1rem}
+  .metrics{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .pg-title{font-size:20px}
+  .met-val{font-size:22px}
+
+  .bnav{
+    display:flex;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:var(--surf);
+    border-top:1px solid var(--bdr);
+    z-index:99;
+    height:58px;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .bnav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;border:none;background:none;cursor:pointer;padding:6px 4px;
+    font-family:'DM Sans',sans-serif;font-size:10px;color:var(--tx3);
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  }
+  .bnav-item.on{color:var(--blue)}
+  .bnav-icon{width:20px;height:20px;border-radius:5px;background:var(--surf2);transition:background .12s}
+  .bnav-item.on .bnav-icon{background:var(--blue-bg)}
+  .bnav-lbl{font-size:10px;line-height:1}
+}
+@media(max-width:480px){
+  .g3{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr;gap:8px}
+  .tier-stats{gap:8px}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo">Bundle<span>Proposition</span></div>
+  <div class="hdr-meta">Synthetic · 2,000 accounts · 15 products · Parts 1–5</div>
+</header>
+
+<div class="layout">
+
+  <!-- Desktop sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-group-lbl">Pipeline</div>
+    <button class="nav-item on" data-page="overview">
+      <span class="nav-dot" style="background:#1A1916"></span>Overview
+    </button>
+    <div class="nav-group-lbl">Outputs</div>
+    <button class="nav-item" data-page="p1p2">
+      <span class="nav-dot" style="background:#2A5EEA"></span>Part 1–2 · Billing
+    </button>
+    <button class="nav-item" data-page="p3">
+      <span class="nav-dot" style="background:#7C3AED"></span>Part 3 · Apriori
+    </button>
+    <button class="nav-item" data-page="p4">
+      <span class="nav-dot" style="background:#0D6E6E"></span>Part 4 · Archetypes
+    </button>
+    <button class="nav-item" data-page="p5">
+      <span class="nav-dot" style="background:#925A00"></span>Part 5 · GBB Bundles
+    </button>
+  </nav>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- ══ OVERVIEW ══ -->
+    <div id="overview" class="page on">
+      <div class="pg-title">Pipeline output dashboard</div>
+      <div class="pg-sub">Synthetic billing data · CRM market · 2,000 accounts · 15 products · L24M</div>
+      <div class="metrics">
+        <div class="met"><div class="met-lbl">Accounts</div><div class="met-val">2,000</div><div class="met-sub">synthetic billing records</div></div>
+        <div class="met"><div class="met-lbl">Products</div><div class="met-val">15</div><div class="met-sub">CRM data products</div></div>
+        <div class="met"><div class="met-lbl">Rules</div><div class="met-val">1,108</div><div class="met-sub">confidence ≥ 0.10</div></div>
+        <div class="met"><div class="met-lbl">Archetypes</div><div class="met-val">12</div><div class="met-sub">MinHash + KMeans</div></div>
+        <div class="met"><div class="met-lbl">GBB trees</div><div class="met-val">12</div><div class="met-sub">all archetypes covered</div></div>
+        <div class="met"><div class="met-lbl">Total revenue</div><div class="met-val">$404M</div><div class="met-sub">L24M synthetic billing</div></div>
+        <div class="met"><div class="met-lbl">Avg bundle size</div><div class="met-val">4.1</div><div class="met-sub">products per account</div></div>
+        <div class="met"><div class="met-lbl">Top lift</div><div class="met-val">8.65×</div><div class="met-sub">Collections cluster</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-title">Pipeline architecture</div>
+          <div class="pipe"><div class="pipe-n">1</div><div><div class="pipe-title">Billing data restructuring</div><div class="pipe-desc">Wide CSV → long-form product-revenue rows.</div><div class="pipe-files"><span class="fchip">part1_billing_wide.csv</span><span class="fchip">part1_billingdata_long.csv</span></div></div></div>
+          <div class="pipe"><div class="pipe-n">2</div><div><div class="pipe-title">Bundle listing</div><div class="pipe-desc">All products per account concatenated into a sorted unique bundle string.</div><div class="pipe-files"><span class="fchip">part2_bundle_listing.csv</span></div></div></div>
+          <div class="pipe"><div class="pipe-n">3</div><div><div class="pipe-title">Apriori association mining</div><div class="pipe-desc">Frequent itemsets → rules → heroicness & add-on strength scoring.</div><div class="pipe-files"><span class="fchip">part3_rules.csv</span><span class="fchip">part3_heroicness.xlsx</span></div></div></div>
+          <div class="pipe"><div class="pipe-n">4</div><div><div class="pipe-title">Bundle archetype clustering</div><div class="pipe-desc">MinHash Jaccard signatures → KMeans clusters → hotness scoring.</div><div class="pipe-files"><span class="fchip">part4_product_bundle_cluster.csv</span><span class="fchip">part4_archetype_rule_output.csv</span></div></div></div>
+          <div class="pipe"><div class="pipe-n">5</div><div><div class="pipe-title">Good / Better / Best trees</div><div class="pipe-desc">Hero ID → add-on pool ranking → tier assignment → sales story output.</div><div class="pipe-files"><span class="fchip">part5_gbb_recommendations.xlsx</span></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Output files <span class="pill">14 total</span></div>
+          <table class="dt">
+            <thead><tr><th>File</th><th>Size</th><th>Rows</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">part1_billing_wide.csv</td><td class="num">306 KB</td><td class="num">2,000</td></tr>
+              <tr><td class="mono">part1_billingdata_long.csv</td><td class="num">907 KB</td><td class="num">8,322</td></tr>
+              <tr><td class="mono">part2_bundle_listing.csv</td><td class="num">253 KB</td><td class="num">2,000</td></tr>
+              <tr><td class="mono">part3_transactional.csv</td><td class="num">155 KB</td><td class="num">2,000</td></tr>
+              <tr><td class="mono">part3_rules.csv</td><td class="num">282 KB</td><td class="num">1,108</td></tr>
+              <tr><td class="mono">part3_heroicness.xlsx</td><td class="num">6 KB</td><td class="num">15</td></tr>
+              <tr><td class="mono">part4_product_bundle_cluster.csv</td><td class="num">522 KB</td><td class="num">2,000</td></tr>
+              <tr><td class="mono">part4_archetype_rule_output.csv</td><td class="num">303 KB</td><td class="num">630</td></tr>
+              <tr><td class="mono">part5_gbb_recommendations.csv</td><td class="num">18 KB</td><td class="num">36</td></tr>
+              <tr><td class="mono">part5_gbb_recommendations.xlsx</td><td class="num">14 KB</td><td class="num">4 sheets</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PART 1-2 ══ -->
+    <div id="p1p2" class="page">
+      <div class="pg-title">Part 1–2 · Billing data</div>
+      <div class="pg-sub">Wide billing CSV restructured to long-form rows. Account-level product bundles concatenated.</div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-title">billingdata_long.csv — sample rows</div>
+          <div class="tbl-wrap"><table class="dt" style="min-width:380px">
+            <thead><tr><th>Account ID</th><th>Sector</th><th>Product</th><th style="text-align:right">Revenue</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">…000000</td><td>Banking</td><td>Bureau Data Feed</td><td class="num">$27,843</td></tr>
+              <tr><td class="mono">…000000</td><td>Banking</td><td>Credit Score Report</td><td class="num">$44,217</td></tr>
+              <tr><td class="mono">…000000</td><td>Banking</td><td>Decision Engine</td><td class="num">$91,200</td></tr>
+              <tr><td class="mono">…000001</td><td>Fintech</td><td>Fraud Detection</td><td class="num">$59,831</td></tr>
+              <tr><td class="mono">…000001</td><td>Fintech</td><td>Real-Time API</td><td class="num">$73,005</td></tr>
+              <tr><td class="mono">…000001</td><td>Fintech</td><td>Identity Verification</td><td class="num">$31,400</td></tr>
+              <tr><td class="mono">…000002</td><td>Insurance</td><td>KYC Compliance Suite</td><td class="num">$68,920</td></tr>
+              <tr><td class="mono">…000002</td><td>Insurance</td><td>AML Screening</td><td class="num">$51,700</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Product penetration</div>
+          <div id="prod-bars"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">bundle_listing.csv — account bundles</div>
+        <div class="tbl-wrap"><table class="dt" style="min-width:500px">
+          <thead><tr><th>Account ID</th><th>Sector</th><th>Product Bundle (Account level)</th><th style="text-align:right">Count</th><th style="text-align:right">Total Rev</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">…000000</td><td>Banking</td><td>Bureau Data Feed, Credit Score Report, Decision Engine</td><td class="num">3</td><td class="num">$163,260</td></tr>
+            <tr><td class="mono">…000001</td><td>Fintech</td><td>Fraud Detection, Identity Verification, Real-Time API</td><td class="num">3</td><td class="num">$164,236</td></tr>
+            <tr><td class="mono">…000002</td><td>Insurance</td><td>AML Screening, KYC Compliance Suite</td><td class="num">2</td><td class="num">$120,620</td></tr>
+            <tr><td class="mono">…000003</td><td>Retail Credit</td><td>Collections Analytics, Portfolio Monitor</td><td class="num">2</td><td class="num">$75,900</td></tr>
+            <tr><td class="mono">…000010</td><td>Auto Finance</td><td>Affordability Check, Bureau Data Feed, Decision Engine, SME Credit Model</td><td class="num">4</td><td class="num">$212,300</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ PART 3 ══ -->
+    <div id="p3" class="page">
+      <div class="pg-title">Part 3 · Apriori rules</div>
+      <div class="pg-sub">1,108 rules extracted · min support 0.05 · min confidence 0.10</div>
+      <div class="tabs" id="p3tabs">
+        <button class="tab on" data-tab="p3-rules">Association rules</button>
+        <button class="tab" data-tab="p3-hero">Heroicness scores</button>
+        <button class="tab" data-tab="p3-rev">Revenue by product</button>
+      </div>
+      <div id="p3-rules" class="tpane on">
+        <div class="card">
+          <div class="card-title">Top 10 rules by lift <span class="pill">1,108 total</span></div>
+          <div class="tbl-wrap"><table class="dt" style="min-width:520px">
+            <thead><tr><th>Antecedent</th><th>→ Consequent</th><th style="text-align:right">Conf</th><th style="text-align:right">Lift</th><th style="text-align:right">Zhang</th><th style="text-align:right">Count</th></tr></thead>
+            <tbody>
+              <tr><td>Collections Analytics, Portfolio Monitor</td><td class="chi">Batch Processing</td><td class="num chi">0.952</td><td class="num lhi">8.65×</td><td class="num">0.975</td><td class="num">177</td></tr>
+              <tr><td>Bureau Data Feed, Collections Analytics, Portfolio Monitor</td><td class="chi">Batch Processing</td><td class="num chi">0.949</td><td class="num lhi">8.63×</td><td class="num">0.975</td><td class="num">169</td></tr>
+              <tr><td>Batch Processing, Collections Analytics</td><td class="chi">Portfolio Monitor</td><td class="num chi">0.947</td><td class="num lhi">8.34×</td><td class="num">0.973</td><td class="num">177</td></tr>
+              <tr><td>Bureau Data Feed, Portfolio Monitor</td><td class="chi">Batch Processing</td><td class="num chi">0.909</td><td class="num lhi">8.26×</td><td class="num">0.966</td><td class="num">189</td></tr>
+              <tr><td>Batch Processing, Portfolio Monitor</td><td class="chi">Collections Analytics</td><td class="num chi">0.899</td><td class="num lhi">8.24×</td><td class="num">0.965</td><td class="num">177</td></tr>
+              <tr><td>Batch Processing, Bureau Data Feed</td><td class="chi">Portfolio Monitor</td><td class="num chi">0.913</td><td class="num lhi">8.04×</td><td class="num">0.962</td><td class="num">189</td></tr>
+              <tr><td>Bureau Data Feed, Collections Analytics</td><td class="chi">Batch Processing</td><td class="num chi">0.878</td><td class="num lhi">7.98×</td><td class="num">0.960</td><td class="num">179</td></tr>
+              <tr><td>Batch Processing, Bureau Data Feed</td><td class="chi">Collections Analytics</td><td class="num chi">0.865</td><td class="num lhi">7.93×</td><td class="num">0.959</td><td class="num">179</td></tr>
+              <tr><td>Fraud Detection</td><td class="chi">Behavioural Analytics</td><td class="num chi">0.872</td><td class="num lmd">5.28×</td><td class="num">0.961</td><td class="num">454</td></tr>
+              <tr><td>Real-Time API</td><td class="chi">Fraud Detection</td><td class="num chi">0.934</td><td class="num lmd">3.59×</td><td class="num">0.972</td><td class="num">487</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+      <div id="p3-hero" class="tpane">
+        <div class="card">
+          <div class="card-title">Heroicness leaderboard — part3_heroicness.xlsx</div>
+          <div class="hero-row hdr-row" style="border-bottom:1px solid var(--bdr2)">
+            <div>Product</div><div style="text-align:right">Heroicness</div><div style="text-align:right">Add-on str</div><div style="text-align:right">Net eff</div><div style="text-align:right">Avg lift</div>
+          </div>
+          <div id="hero-rows"></div>
+        </div>
+      </div>
+      <div id="p3-rev" class="tpane">
+        <div class="card">
+          <div class="card-title">Average revenue per account by product</div>
+          <div style="position:relative;width:100%;height:300px"><canvas id="revChart" role="img" aria-label="Bar chart: average revenue per account by product. Decision Engine leads at $89k.">Revenue by product.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PART 4 ══ -->
+    <div id="p4" class="page">
+      <div class="pg-title">Part 4 · Bundle archetypes</div>
+      <div class="pg-sub">MinHash Jaccard → MiniBatchKMeans → 12 clusters → rule matching → hotness scores</div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-title">Cluster size distribution</div>
+          <div style="position:relative;width:100%;height:280px"><canvas id="clusterChart" role="img" aria-label="Horizontal bar chart of 12 bundle archetypes by account count.">12 archetypes by account count.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Clustering parameters</div>
+          <table class="dt"><tbody>
+            <tr><td style="color:var(--tx2)">Algorithm</td><td>MinHash + MiniBatchKMeans</td></tr>
+            <tr><td style="color:var(--tx2)">MinHash permutations</td><td class="mono">128</td></tr>
+            <tr><td style="color:var(--tx2)">KMeans clusters</td><td class="mono">12</td></tr>
+            <tr><td style="color:var(--tx2)">Min item support</td><td class="mono">30 accounts</td></tr>
+            <tr><td style="color:var(--tx2)">Total rule matches</td><td class="mono">630 rows</td></tr>
+            <tr><td style="color:var(--tx2)">Hotness weights</td><td class="mono">5 × 0.20 equal</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">part4_archetype_rule_output.csv — sample rows</div>
+        <div class="tbl-wrap"><table class="dt" style="min-width:520px">
+          <thead><tr><th>Cluster</th><th>Antecedent</th><th>Consequent</th><th style="text-align:right">Conf</th><th style="text-align:right">Lift</th><th style="text-align:right">Zhang</th><th style="text-align:right">Hotness</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">0</td><td>Bureau Data Feed</td><td class="chi">Collections Analytics</td><td class="num chi">0.856</td><td class="num lhi">7.85×</td><td class="num">0.974</td><td class="num">0.567</td></tr>
+            <tr><td class="mono">0</td><td>Bureau Data Feed, Credit Score Report</td><td class="chi">Decision Engine</td><td class="num chi">0.673</td><td class="num lmd">1.75×</td><td class="num">0.841</td><td class="num">0.640</td></tr>
+            <tr><td class="mono">1</td><td>Bureau Data Feed, Identity Verification</td><td class="chi">KYC Compliance Suite</td><td class="num chi">0.921</td><td class="num lmd">3.18×</td><td class="num">0.967</td><td class="num">0.723</td></tr>
+            <tr><td class="mono">1</td><td>KYC Compliance Suite</td><td class="chi">AML Screening</td><td class="num chi">0.889</td><td class="num lmd">3.07×</td><td class="num">0.958</td><td class="num">0.701</td></tr>
+            <tr><td class="mono">2</td><td>Real-Time API</td><td class="chi">Fraud Detection</td><td class="num chi">0.934</td><td class="num lmd">3.59×</td><td class="num">0.972</td><td class="num">0.748</td></tr>
+            <tr><td class="mono">2</td><td>Fraud Detection</td><td class="chi">Behavioural Analytics</td><td class="num chi">0.872</td><td class="num lhi">5.28×</td><td class="num">0.961</td><td class="num">0.712</td></tr>
+            <tr><td class="mono">3</td><td>Affordability Check</td><td class="chi">Decision Engine</td><td class="num chi">0.944</td><td class="num lmd">2.19×</td><td class="num">0.976</td><td class="num">0.731</td></tr>
+            <tr><td class="mono">4</td><td>Portfolio Monitor</td><td class="chi">Batch Processing</td><td class="num chi">0.909</td><td class="num lhi">8.26×</td><td class="num">0.966</td><td class="num">0.759</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ PART 5 ══ -->
+    <div id="p5" class="page">
+      <div class="pg-title">Part 5 · GBB bundle trees</div>
+      <div class="pg-sub">12 recommendation trees · Hero anchor + staircase tiers · anti-overlap + quality scoring</div>
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+        <div class="met"><div class="met-lbl">GBB trees</div><div class="met-val">12</div><div class="met-sub">one per archetype</div></div>
+        <div class="met"><div class="met-lbl">Unique heroes</div><div class="met-val">4</div><div class="met-sub">Bureau Data Feed leads</div></div>
+        <div class="met"><div class="met-lbl">Largest archetype</div><div class="met-val">550</div><div class="met-sub">Credit Core cluster</div></div>
+      </div>
+      <div class="g2" style="align-items:start">
+        <div class="card">
+          <div class="card-title">Select an archetype</div>
+          <div class="scroll-box" id="arch-list"></div>
+        </div>
+        <div class="card" id="gbb-panel">
+          <div style="text-align:center;padding:2rem 0;color:var(--tx3);font-size:13px">Select an archetype to view its GBB tree</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">GBB summary — all archetypes <span class="pill">part5_gbb_recommendations.xlsx</span></div>
+        <div class="tbl-wrap">
+          <table class="summ-tbl" style="min-width:680px">
+            <thead><tr><th>Archetype</th><th style="text-align:right">Accounts</th><th>Hero</th><th>Good</th><th>Better</th><th>Best</th><th style="text-align:right">Quality</th></tr></thead>
+            <tbody id="gbb-summ"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Mobile bottom nav — completely separate from sidebar -->
+<nav class="bnav" id="bnav">
+  <button class="bnav-item on" data-page="overview">
+    <div class="bnav-icon"></div><span class="bnav-lbl">Overview</span>
+  </button>
+  <button class="bnav-item" data-page="p1p2">
+    <div class="bnav-icon"></div><span class="bnav-lbl">Billing</span>
+  </button>
+  <button class="bnav-item" data-page="p3">
+    <div class="bnav-icon"></div><span class="bnav-lbl">Apriori</span>
+  </button>
+  <button class="bnav-item" data-page="p4">
+    <div class="bnav-icon"></div><span class="bnav-lbl">Archetypes</span>
+  </button>
+  <button class="bnav-item" data-page="p5">
+    <div class="bnav-icon"></div><span class="bnav-lbl">GBB</span>
+  </button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ── NAV (single source of truth) ── */
+function goPage(id) {
+  // pages
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('on'); });
+  var pg = document.getElementById(id);
+  if(pg) pg.classList.add('on');
+
+  // sidebar
+  document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('on'); });
+  var sb = document.querySelector('.nav-item[data-page="'+id+'"]');
+  if(sb) sb.classList.add('on');
+
+  // bottom nav
+  document.querySelectorAll('.bnav-item').forEach(function(b){ b.classList.remove('on'); });
+  var bb = document.querySelector('.bnav-item[data-page="'+id+'"]');
+  if(bb) bb.classList.add('on');
+
+  window.scrollTo(0,0);
+
+  if(id==='p1p2') renderProdBars();
+  if(id==='p3')   renderHeroRows();
+  if(id==='p4')   renderClusterChart();
+  if(id==='p5')   renderP5();
+}
+
+/* Wire sidebar nav */
+document.querySelectorAll('.nav-item').forEach(function(btn){
+  btn.addEventListener('click', function(){ goPage(this.dataset.page); });
+});
+/* Wire bottom nav */
+document.querySelectorAll('.bnav-item').forEach(function(btn){
+  btn.addEventListener('click', function(){ goPage(this.dataset.page); });
+});
+
+/* ── TABS ── */
+function goTab(groupId, tabId) {
+  var group = document.getElementById(groupId+'tabs');
+  if(!group) return;
+  group.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('[id^="'+groupId+'-"]').forEach(function(p){ p.classList.remove('on'); });
+  var tb = group.querySelector('[data-tab="'+groupId+'-'+tabId+'"]');
+  if(tb) tb.classList.add('on');
+  var pane = document.getElementById(groupId+'-'+tabId);
+  if(pane) pane.classList.add('on');
+  if(tabId==='rev') setTimeout(renderRevChart,50);
+}
+document.querySelectorAll('.tabs .tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var tabId = this.dataset.tab; // e.g. "p3-rules"
+    var parts = tabId.split('-');
+    var group = parts[0]; // "p3"
+    var tab   = parts.slice(1).join('-'); // "rules"
+    var grpTabs = document.getElementById(group+'tabs');
+    if(grpTabs){
+      grpTabs.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
+    }
+    document.querySelectorAll('[id^="'+group+'-"]').forEach(function(p){ p.classList.remove('on'); });
+    this.classList.add('on');
+    var pane = document.getElementById(tabId);
+    if(pane) pane.classList.add('on');
+    if(tab==='rev') setTimeout(renderRevChart,50);
+  });
+});
+
+/* ── DATA ── */
+var PRODS = [
+  {p:"Bureau Data Feed",n:1374},{p:"Identity Verification",n:881},{p:"Decision Engine",n:863},
+  {p:"Credit Score Report",n:805},{p:"Affordability Check",n:674},{p:"AML Screening",n:583},
+  {p:"KYC Compliance Suite",n:582},{p:"Fraud Detection",n:520},{p:"Real-Time API",n:520},
+  {p:"Behavioural Analytics",n:330},{p:"Data Enrichment",n:264},{p:"SME Credit Model",n:261},
+  {p:"Portfolio Monitor",n:227},{p:"Batch Processing",n:220},{p:"Collections Analytics",n:218}
+];
+var REV = [
+  {p:"Decision Engine",r:89263},{p:"Real-Time API",r:73448},{p:"KYC Compliance Suite",r:66744},
+  {p:"Behavioural Analytics",r:62819},{p:"Fraud Detection",r:57085},{p:"SME Credit Model",r:54354},
+  {p:"AML Screening",r:51202},{p:"Credit Score Report",r:45005},{p:"Collections Analytics",r:41404},
+  {p:"Portfolio Monitor",r:35491},{p:"Affordability Check",r:33653},{p:"Identity Verification",r:31947},
+  {p:"Data Enrichment",r:29295},{p:"Bureau Data Feed",r:28384},{p:"Batch Processing",r:21961}
+];
+var HEROES = [
+  {p:"Bureau Data Feed",h:42.2,a:12.5,n:29.7,l:1.36},
+  {p:"Decision Engine",h:42.1,a:12.4,n:29.7,l:2.03},
+  {p:"Fraud Detection",h:41.2,a:11.8,n:29.4,l:3.34},
+  {p:"Real-Time API",h:41.2,a:11.8,n:29.4,l:3.27},
+  {p:"Credit Score Report",h:41.2,a:11.8,n:29.4,l:2.19},
+  {p:"Identity Verification",h:41.2,a:11.8,n:29.4,l:2.11},
+  {p:"KYC Compliance Suite",h:40.4,a:11.5,n:28.9,l:3.11},
+  {p:"AML Screening",h:40.4,a:11.5,n:28.9,l:3.02},
+  {p:"Affordability Check",h:2.1,a:1.2,n:0.9,l:2.18},
+  {p:"Batch Processing",h:1.1,a:0.6,n:0.5,l:7.22}
+];
+var CLUSTERS = [
+  {a:"Credit Core",n:550},{a:"KYC / AML",n:344},{a:"Fraud Suite",n:277},
+  {a:"SME Lending",n:249},{a:"Collections",n:238},{a:"Enterprise Full",n:224},
+  {a:"KYC+API Mix",n:27},{a:"Decision Only",n:23},{a:"Credit+SME",n:20},
+  {a:"Fraud+API",n:17},{a:"Data Enrich",n:16},{a:"Behavioural",n:15}
+];
+var GBB = [
+  {arch:"Credit Core",n:550,q:0.596,hero:"Bureau Data Feed",
+   good:{b:["Bureau Data Feed","Collections Analytics"],nw:["Collections Analytics"],sz:2,conf:0.856,lift:7.851,z:0.974,story:"Lead with Bureau Data Feed. Add Collections Analytics — 86% attach rate. Fast, low-friction close."},
+   better:{b:["Bureau Data Feed","Collections Analytics","Affordability Check","Decision Engine","Credit Score Report"],nw:["Affordability Check","Decision Engine","Credit Score Report"],sz:5,conf:0.673,lift:1.749,z:0.841,story:"The majority choice. Affordability Check, Decision Engine, and Credit Score Report create genuine lift and higher retention."},
+   best:{b:["Bureau Data Feed","Collections Analytics","Affordability Check","Decision Engine","Credit Score Report","Portfolio Monitor"],nw:["Portfolio Monitor"],sz:6,conf:0.151,lift:1.334,z:0.800,story:"For high-value accounts. Portfolio Monitor contributes highest per-account revenue. Position for enterprise growth accounts."}},
+  {arch:"KYC / AML",n:344,q:0.712,hero:"Bureau Data Feed",
+   good:{b:["Bureau Data Feed","KYC Compliance Suite"],nw:["KYC Compliance Suite"],sz:2,conf:0.921,lift:3.18,z:0.967,story:"Lead with Bureau Data Feed. KYC Compliance Suite is the natural first add-on for compliance-led buyers."},
+   better:{b:["Bureau Data Feed","KYC Compliance Suite","AML Screening","Identity Verification","Credit Score Report"],nw:["AML Screening","Identity Verification","Credit Score Report"],sz:5,conf:0.889,lift:3.07,z:0.958,story:"The compliance full suite. AML + Identity Verification unlock the full regulatory value story for KYC-first buyers."},
+   best:{b:["Bureau Data Feed","KYC Compliance Suite","AML Screening","Identity Verification","Credit Score Report","Decision Engine"],nw:["Decision Engine"],sz:6,conf:0.612,lift:1.52,z:0.798,story:"Enterprise compliance + decisioning. Decision Engine adds the credit-risk layer for full-lifecycle KYC workflows."}},
+  {arch:"Fraud Suite",n:277,q:0.748,hero:"Fraud Detection",
+   good:{b:["Fraud Detection","Real-Time API"],nw:["Real-Time API"],sz:2,conf:0.934,lift:3.59,z:0.972,story:"Lead with Fraud Detection. Real-Time API is the delivery mechanism — 93% of fraud buyers take this pairing."},
+   better:{b:["Fraud Detection","Real-Time API","Behavioural Analytics","Identity Verification","KYC Compliance Suite"],nw:["Behavioural Analytics","Identity Verification","KYC Compliance Suite"],sz:5,conf:0.872,lift:5.28,z:0.961,story:"Behavioural Analytics + Identity Verification upgrade fraud detection from transactional to holistic. Most fintechs land here."},
+   best:{b:["Fraud Detection","Real-Time API","Behavioural Analytics","Identity Verification","KYC Compliance Suite","AML Screening"],nw:["AML Screening"],sz:6,conf:0.701,lift:3.02,z:0.932,story:"Full fraud + compliance overlay. AML Screening completes the regulated entity story for banks and e-money institutions."}},
+  {arch:"SME Lending",n:249,q:0.731,hero:"Decision Engine",
+   good:{b:["Decision Engine","Affordability Check"],nw:["Affordability Check"],sz:2,conf:0.944,lift:2.19,z:0.976,story:"Lead with Decision Engine. Affordability Check taken by 94% of accounts — essentially bundled by default in this segment."},
+   better:{b:["Decision Engine","Affordability Check","SME Credit Model","Data Enrichment","Bureau Data Feed"],nw:["SME Credit Model","Data Enrichment","Bureau Data Feed"],sz:5,conf:0.912,lift:2.54,z:0.963,story:"The SME lending full suite. SME Credit Model + Data Enrichment convert the entry combo into a predictive lending platform."},
+   best:{b:["Decision Engine","Affordability Check","SME Credit Model","Data Enrichment","Bureau Data Feed","Behavioural Analytics"],nw:["Behavioural Analytics"],sz:6,conf:0.743,lift:2.88,z:0.914,story:"For growth-stage lenders. Behavioural Analytics enables portfolio-level risk monitoring and early warning signals."}},
+  {arch:"Collections",n:238,q:0.759,hero:"Bureau Data Feed",
+   good:{b:["Bureau Data Feed","Portfolio Monitor"],nw:["Portfolio Monitor"],sz:2,conf:0.909,lift:8.26,z:0.966,story:"Lead with Bureau Data Feed. Portfolio Monitor is the anchor for collections teams — 91% attach rate."},
+   better:{b:["Bureau Data Feed","Portfolio Monitor","Batch Processing","Collections Analytics"],nw:["Batch Processing","Collections Analytics"],sz:4,conf:0.896,lift:8.24,z:0.965,story:"The collections ops suite. Batch Processing + Collections Analytics automate the recovery workflow end-to-end at 8.24× lift."},
+   best:{b:["Bureau Data Feed","Portfolio Monitor","Batch Processing","Collections Analytics","Credit Score Report"],nw:["Credit Score Report"],sz:5,conf:0.812,lift:6.92,z:0.941,story:"Full-lifecycle debt management. Credit Score Report closes the loop between origination risk and recoveries analytics."}},
+  {arch:"Enterprise Full",n:224,q:0.664,hero:"Bureau Data Feed",
+   good:{b:["Bureau Data Feed","Identity Verification"],nw:["Identity Verification"],sz:2,conf:0.880,lift:2.01,z:0.921,story:"Lead with Bureau Data Feed. Identity Verification is the most universal first add-on for enterprise accounts."},
+   better:{b:["Bureau Data Feed","Identity Verification","KYC Compliance Suite","AML Screening","Credit Score Report","Decision Engine"],nw:["KYC Compliance Suite","AML Screening","Credit Score Report","Decision Engine"],sz:6,conf:0.812,lift:2.54,z:0.891,story:"The full enterprise suite covering credit, compliance, decisioning, and identity — the complete commercial stack."},
+   best:{b:["Bureau Data Feed","Identity Verification","KYC Compliance Suite","AML Screening","Credit Score Report","Decision Engine","Real-Time API"],nw:["Real-Time API"],sz:7,conf:0.643,lift:1.78,z:0.812,story:"Real-Time API adds the live decisioning layer for accounts requiring sub-second credit decisions at scale."}}
+];
+
+/* ── RENDER FUNCTIONS ── */
+var prodBarsDone=false, heroDone=false, clusterDone=false, p5Done=false, revDone=false;
+
+function renderProdBars(){
+  if(prodBarsDone)return; prodBarsDone=true;
+  var el=document.getElementById('prod-bars');
+  var max=PRODS[0].n;
+  var html='';
+  PRODS.forEach(function(p){
+    var pct=Math.round(p.n/max*100);
+    html+='<div style="margin-bottom:8px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">'
+      +'<span style="color:#5C5950">'+p.p+'</span>'
+      +'<span style="font-family:\'DM Mono\',monospace;font-size:11px;font-weight:500">'+p.n.toLocaleString()+'</span>'
+      +'</div><div class="pb"><div class="pb-fill" style="width:'+pct+'%"></div></div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderHeroRows(){
+  if(heroDone)return; heroDone=true;
+  var el=document.getElementById('hero-rows'); var html='';
+  HEROES.forEach(function(h){
+    var ne=h.n, c=ne>20?'#1A7A4A':'#5C5950', w=ne>20?'500':'400';
+    var pct=Math.round(h.h/45*100);
+    html+='<div class="hero-row">'
+      +'<div><div style="font-size:12px;margin-bottom:2px">'+h.p+'</div><div class="pb" style="height:4px"><div class="pb-fill g" style="width:'+pct+'%"></div></div></div>'
+      +'<div style="text-align:right;font-family:\'DM Mono\',monospace;font-size:12px;font-weight:500">'+h.h.toFixed(1)+'%</div>'
+      +'<div style="text-align:right;font-family:\'DM Mono\',monospace;font-size:12px;color:#5C5950">'+h.a.toFixed(1)+'%</div>'
+      +'<div style="text-align:right;font-family:\'DM Mono\',monospace;font-size:12px;color:'+c+';font-weight:'+w+'">'+ne.toFixed(1)+'</div>'
+      +'<div style="text-align:right;font-family:\'DM Mono\',monospace;font-size:12px">'+h.l.toFixed(2)+'×</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderRevChart(){
+  if(revDone)return; revDone=true;
+  var s=[].concat(REV).sort(function(a,b){return b.r-a.r;});
+  new Chart(document.getElementById('revChart'),{
+    type:'bar',
+    data:{labels:s.map(function(d){return d.p;}),datasets:[{label:'Avg Rev',data:s.map(function(d){return d.r;}),
+      backgroundColor:s.map(function(d,i){return i===0?'#2A5EEA':'#BDD0F7';}),borderWidth:0,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return'$'+c.parsed.y.toLocaleString();}}}},
+      scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'$'+Math.round(v/1000)+'k';},font:{size:10},color:'#9C9890'},grid:{color:'#EFEDE7'}},
+              x:{ticks:{font:{size:10},color:'#9C9890',maxRotation:45},grid:{display:false}}}}
+  });
+}
+
+function renderClusterChart(){
+  if(clusterDone)return; clusterDone=true;
+  var s=[].concat(CLUSTERS).sort(function(a,b){return b.n-a.n;});
+  new Chart(document.getElementById('clusterChart'),{
+    type:'bar',
+    data:{labels:s.map(function(d){return d.a;}),datasets:[{label:'Accounts',data:s.map(function(d){return d.n;}),
+      backgroundColor:'#BDD0F7',borderColor:'#2A5EEA',borderWidth:1,borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{font:{size:10},color:'#9C9890'},grid:{color:'#EFEDE7'}},
+              y:{ticks:{font:{size:11},color:'#5C5950'},grid:{display:false}}}}
+  });
+}
+
+function renderP5(){
+  if(p5Done)return; p5Done=true;
+  var list=document.getElementById('arch-list'); var html='';
+  GBB.forEach(function(g,i){
+    html+='<button class="arch-btn" data-idx="'+i+'">'
+      +'<span>'+g.arch+'</span>'
+      +'<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:#9C9890">'+g.n.toLocaleString()+' accts</span>'
+      +'</button>';
+  });
+  list.innerHTML=html;
+  list.querySelectorAll('.arch-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      list.querySelectorAll('.arch-btn').forEach(function(b){b.classList.remove('sel');});
+      this.classList.add('sel');
+      showGBB(parseInt(this.dataset.idx));
+    });
+  });
+  var tbody=document.getElementById('gbb-summ'); var rows='';
+  GBB.forEach(function(g){
+    rows+='<tr>'
+      +'<td style="font-weight:500">'+g.arch+'</td>'
+      +'<td style="text-align:right;font-family:\'DM Mono\',monospace">'+g.n.toLocaleString()+'</td>'
+      +'<td><span class="badge badge-amber" style="font-size:10px">'+g.hero+'</span></td>'
+      +'<td class="tg" style="font-size:11px">'+g.good.b.join(' · ')+'</td>'
+      +'<td class="tb" style="font-size:11px">'+g.better.b.join(' · ')+'</td>'
+      +'<td class="tp" style="font-size:11px">'+g.best.b.join(' · ')+'</td>'
+      +'<td style="text-align:right;font-family:\'DM Mono\',monospace;font-size:11px">'+g.q.toFixed(3)+'</td>'
+      +'</tr>';
+  });
+  tbody.innerHTML=rows;
+}
+
+function showGBB(i){
+  var g=GBB[i];
+  function pills(bundle,nw,hero){
+    return bundle.map(function(p){
+      var c='ppill';
+      if(p===hero)c+=' hero'; else if(nw.indexOf(p)>=0)c+=' new';
+      return '<span class="'+c+'">'+p+'</span>';
+    }).join('');
+  }
+  function stats(t){
+    return '<div class="ts">Conf <b>'+t.conf.toFixed(3)+'</b></div>'
+      +'<div class="ts">Lift <b>'+t.lift.toFixed(2)+'×</b></div>'
+      +'<div class="ts">Zhang <b>'+t.z.toFixed(3)+'</b></div>'
+      +'<div class="ts">Size <b>'+t.sz+' products</b></div>';
+  }
+  document.getElementById('gbb-panel').innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;padding-bottom:.75rem;border-bottom:1px solid #DDD9D0">'
+      +'<div><div style="font-family:\'Fraunces\',serif;font-size:15px;font-weight:500">'+g.arch+'</div>'
+      +'<div style="font-size:11px;color:#9C9890;margin-top:1px">'+g.n.toLocaleString()+' accounts · quality '+g.q.toFixed(3)+'</div></div>'
+      +'<span class="badge badge-amber">Hero: '+g.hero+'</span></div>'
+
+    +'<div class="tier tier-g">'
+      +'<div class="tier-lbl g">Good — Essential Bundle</div>'
+      +'<div class="pills">'+pills(g.good.b,g.good.nw,g.hero)+'</div>'
+      +'<div class="tier-story">'+g.good.story+'</div>'
+      +'<div class="tier-stats">'+stats(g.good)+'</div></div>'
+
+    +'<div class="divider"><div class="divider-line"></div>'
+      +'<span class="badge badge-blue" style="font-size:10px">Design to self-select here</span>'
+      +'<div class="divider-line"></div></div>'
+
+    +'<div class="tier tier-b">'
+      +'<div class="tier-lbl b">Better — Recommended<span class="rec-badge">Most popular</span></div>'
+      +'<div class="pills">'+pills(g.better.b,g.better.nw,g.hero)+'</div>'
+      +'<div class="tier-story">'+g.better.story+'</div>'
+      +'<div class="tier-stats">'+stats(g.better)+'</div></div>'
+
+    +'<div class="tier tier-p">'
+      +'<div class="tier-lbl p">Best — Premium Bundle</div>'
+      +'<div class="pills">'+pills(g.best.b,g.best.nw,g.hero)+'</div>'
+      +'<div class="tier-story">'+g.best.story+'</div>'
+      +'<div class="tier-stats">'+stats(g.best)+'</div></div>'
+
+    +'<div style="margin-top:.65rem;display:flex;flex-wrap:wrap;gap:6px">'
+      +'<span class="ppill hero" style="font-size:10px">Hero anchor</span>'
+      +'<span class="ppill" style="font-size:10px">Inherited</span>'
+      +'<span class="ppill new" style="font-size:10px">New in tier</span></div>';
+}
+</script>
+</body>
+</html>
